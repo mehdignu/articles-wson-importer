@@ -3,7 +3,8 @@ import xmltodict
 import gzip
 import json
 from article_parser import ArticleParser
-
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 url = 'https://www.goldenekamera.de/sitemaps/archive.xml'
 
@@ -20,7 +21,7 @@ for r in raw["sitemapindex"]["sitemap"]:
         c += 1
         continue
     else:
-        if c == 2:
+        if c == 50:
             break
         c += 1
     #try:
