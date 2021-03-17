@@ -11,27 +11,19 @@ class ArticleParser():
     ''' return body with the correct widgets and a list of all images '''
     body_images = []
     for widget in widgets:
-      widget_type = widget['parts'][0]['type']
-      widget_content = widget['parts'][0]['content']
+      widget_type = widget['type']
+      widget_content = widget['content']
       if body.find(widget_content) != -1:
+        if widget_type == 'TWITTER':
+          twitter_embed = get_twitter_embed(widget)
+          body = body.replace(widget_content, twitter_embed)
+        if widget_type == 'YOUTUBE':
+          youtube_embed = get_youtube_embed(widget)
+          body = body.replace(widget_content, youtube_embed)
         if widget_type == 'IMAGE':
-          img = {}
-          src = widget['parts'][0]['presentationElement']['article']['imageUrls']['w0-original-q85']
-          img['src'] = src
-          img_fields = widget['parts'][0]['presentationElement']['fields']
-          # add image figcaption under the picture
-          img_fig = ''
-          if 'caption' in img_fields and 'copyright' in img_fields:
-            img['caption'] = img_fields['caption']
-            img['copyright'] = img_fields['copyright']
-            img_fig = ' <figcaption> '+img['caption']+' <span class="image-credit">Credit: '+img['copyright']+'</span></figcaption>'
-          body_images.append(img)
-          soup = BeautifulSoup(widget_content, features="html.parser")
-          for link in soup.findAll('img'):
-              link['src'] = img['src']
-              link['width'] = '780'
-              link['height'] = '1024'
-          new_img = str(soup)
+          images, new_img, img_fig = get_inline_images(widget, widget_content)
+          # save the inline images and group them together
+          body_images.append(images)
           body = body.replace(widget_content, new_img + img_fig)
     return (body, body_images)
 
@@ -53,7 +45,7 @@ class ArticleParser():
       context_article = self.article['contextArticle']
 
     # only import news articles for testing
-    if 'contextArticle' in self.article and context_article['contentType'] == 'news' and opener is not None:
+    if 'contextArticle' in self.article:
       
       article['articleId'] = context_article['articleId']
       article['category'] = self.get_category(context_article['url'])
@@ -69,6 +61,8 @@ class ArticleParser():
 
       #get the body of the article
       body_widgets = get_body_widgets(self.article['areas'])
+      #for x in body_widgets:
+      #  print(x['parts'])
       article['body'], article['images'] = self.parse_body(context_article['fields']['body'], body_widgets)
 
       #get seo fields
@@ -79,6 +73,4 @@ class ArticleParser():
       return article
     else:
       return {}
-      
-
-
+     
