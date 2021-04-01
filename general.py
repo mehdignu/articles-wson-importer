@@ -51,13 +51,15 @@ def get_body_widgets(areas):
 def get_youtube_embed(youtube_widget):
     ''' get the youtube html embed from video id '''
     youtube_fields = youtube_widget['presentationElement']['article']['fields']
-
-    videoID = youtube_fields['videoid']
-    youtube_html = '<iframe width="420" height="315" src="http://www.youtube.com/embed/'+ videoID +'" frameborder="0" allowfullscreen></iframe>'
-    youtube_title = ''
-    if 'teaser_title' in youtube_fields:
-        youtube_title = '<figcaption>' + youtube_fields['teaser_title'] + '</figcaption>'
-    return youtube_html + youtube_title
+    if 'videoid' in youtube_fields:
+        videoID = youtube_fields['videoid']
+        youtube_html = '<iframe width="420" height="315" src="https://www.youtube.com/embed/'+ videoID +'" frameborder="0" allowfullscreen></iframe>'
+        youtube_title = ''
+        if 'teaser_title' in youtube_fields:
+            youtube_title = '<figcaption>' + youtube_fields['teaser_title'] + '</figcaption>'
+        return youtube_html + youtube_title
+    else:
+        return ''
     
 
 def get_inline_images(widget, widget_content):
@@ -89,5 +91,34 @@ def get_twitter_embed(twitter_widget):
     x = requests.get(embReqUrl)
     if x.status_code == 200:
         return x.json()['html']
+    else:
+        return ''
+
+def get_instagram_embed(instagram_widget):
+    ''' get the instagram embed from the ig id '''
+    instagram_fields = instagram_widget['presentationElement']['article']['fields'] 
+    instagram_embedid = instagram_fields['embed_id']
+    embed_url = 'https://graph.facebook.com/v10.0/instagram_oembed?url=https://www.instagram.com/p/'+ instagram_embedid +'/&access_token=377648229352211|237bf9dd76da8dc12a796644d76911ec'
+    x = requests.get(embed_url)
+    if x.status_code == 200:
+        return x.json()['html']
+    else:
+        return ''
+
+def get_facebook_embed(facebook_widget):
+    ''' get the facebook embed from the embed url '''
+    facebook_fields = facebook_widget['presentationElement']['article']['fields'] 
+    facebook_embedurl = facebook_fields['embedded_url']
+    if facebook_embedurl != '':
+        return '<div class="fb-post" data-href="'+ facebook_embedurl +'" data-width="500"></div>'
+    else:
+        return ''
+
+def get_inline_link(article_link):
+    ''' get the internal link widget type '''
+    article_url = facebook_widget['presentationElement']['article']['url'] 
+    link_title = facebook_widget['presentationElement']['fields']['title'] 
+    if article_url != '':
+        return '<a href="'+ article_url +'" alt="'+ link_title +'"></a>'
     else:
         return ''
