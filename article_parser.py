@@ -14,6 +14,15 @@ class ArticleParser():
       widget_type = widget['type']
       widget_content = widget['content']
       if body.find(widget_content) != -1:
+        if widget_type == 'ARTICLE':
+          inline_link = get_inline_link(widget)
+          body = body.replace(widget_content, inline_link)
+        if widget_type == 'FACEBOOK':
+          facebook_embed = get_facebook_embed(widget)
+          body = body.replace(widget_content, facebook_embed)
+        if widget_type == 'INSTAGRAM':
+          instagram_embed = get_instagram_embed(widget)
+          body = body.replace(widget_content, instagram_embed)
         if widget_type == 'TWITTER':
           twitter_embed = get_twitter_embed(widget)
           body = body.replace(widget_content, twitter_embed)
@@ -45,32 +54,36 @@ class ArticleParser():
       context_article = self.article['contextArticle']
 
     # only import news articles for testing
-    if 'contextArticle' in self.article:
+    if 'contextArticle' in self.article and context_article['contentType'] == 'news':
+      try:
+        article['articleId'] = context_article['articleId']
+        article['category'] = self.get_category(context_article['url'])
+        article['keywords'] = context_article['tagNames']
+        article['firstPublishedDate'] = context_article['firstPublishedDate']
+        article['lastModifiedDate'] = context_article['lastModifiedDate']
+        article['contentType'] = context_article['contentType']
+        article['title'] = context_article['fields']['title']
+        if 'intro' in context_article['fields']:
+          article['intro'] = context_article['fields']['intro']
+
+        article['slug'] = self.get_slug(context_article['url'])
+
+        #get the body of the article
+        body_widgets = get_body_widgets(self.article['areas'])
+        #for x in body_widgets:
+        #  print(x['parts'])
       
-      article['articleId'] = context_article['articleId']
-      article['category'] = self.get_category(context_article['url'])
-      article['keywords'] = context_article['tagNames']
-      article['firstPublishedDate'] = context_article['firstPublishedDate']
-      article['lastModifiedDate'] = context_article['lastModifiedDate']
-      article['contentType'] = context_article['contentType']
-      article['title'] = context_article['fields']['title']
-      if 'intro' in context_article['fields']:
-        article['intro'] = context_article['fields']['intro']
-
-      article['slug'] = self.get_slug(context_article['url'])
-
-      #get the body of the article
-      body_widgets = get_body_widgets(self.article['areas'])
-      #for x in body_widgets:
-      #  print(x['parts'])
-      article['body'], article['images'] = self.parse_body(context_article['fields']['body'], body_widgets)
-
-      #get seo fields
-      article['seo_title'] = context_article['fields']['seo_title']
-      if 'seo_description' in context_article['fields']:
-        article['seo_description'] = context_article['fields']['seo_description']
+        article['body'], article['images'] = self.parse_body(context_article['fields']['body'], body_widgets)
       
-      return article
+        #get seo fields
+        article['seo_title'] = context_article['fields']['seo_title']
+        if 'seo_description' in context_article['fields']:
+          article['seo_description'] = context_article['fields']['seo_description']
+        
+        return article
+      except:
+        return {}
     else:
       return {}
-     
+
+      
